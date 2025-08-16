@@ -4,7 +4,7 @@ import FileUploader from "~/components/FileUploader";
 import {useNavigate} from "react-router";
 import {prepareInstructions} from "../../constants";
 import { usePuterStore } from 'lib/puter';
-import { convertPdfToImage, testPdfJs, convertPdfToImageSimple } from 'lib/pdf2img';
+import { convertPdfToImage } from 'lib/pdf2img';
 import { generateUUID } from 'lib/utils';
 
 const Upload = () => {
@@ -25,23 +25,9 @@ const Upload = () => {
         const uploadedFile = await fs.upload([file]);
         if(!uploadedFile) return setStatusText('Error: Failed to upload file');
 
-        setStatusText('Testing PDF.js...');
-        const testResult = await testPdfJs();
-        if (!testResult.success) {
-            console.error('PDF.js test failed:', testResult.error);
-            return setStatusText(`Error: PDF.js test failed - ${testResult.error}`);
-        }
-        
         setStatusText('Converting to image...');
-        let imageFile = await convertPdfToImage(file);
-        if(!imageFile.file) {
-            console.error('PDF conversion failed:', imageFile.error);
-            setStatusText('Using fallback conversion...');
-            imageFile = await convertPdfToImageSimple(file);
-            if(!imageFile.file) {
-                return setStatusText(`Error: ${imageFile.error || 'Failed to convert PDF to image'}`);
-            }
-        }
+        const imageFile = await convertPdfToImage(file);
+        if(!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
 
         setStatusText('Uploading the image...');
         const uploadedImage = await fs.upload([imageFile.file]);
